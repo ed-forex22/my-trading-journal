@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 
+        Chosen Palette: Calm Neutral
+        - Background: #F8F9FA (Off-white)
+        - Text: #212529 (Dark Gray)
+        - Primary Accent: #4A5568 (Slate Gray)
+        - Win/Positive: #2F855A (Green)
+        - Loss/Negative: #C53030 (Red)
+        - Neutral/Info: #2B6CB0 (Blue)
+    -->
+    <!-- 
+        Application Structure Plan: The application is designed as a single-page interactive dashboard. This structure was chosen to provide the trader with a comprehensive, at-a-glance overview of their performance, which is the primary goal of a trading journal. The layout consists of three main parts: 1) A high-level KPI section for immediate feedback on key metrics (P&L, Win Rate). 2) A visual analysis section with interactive charts to identify trends and patterns in performance, strategy, and psychology. 3) A detailed, filterable trade log table for granular review. A modal form for data entry keeps the main interface clean. This non-linear, dashboard approach is superior to a simple document layout because it facilitates active analysis and exploration, allowing the user to seamlessly move from a high-level overview to detailed trade inspection.
+    -->
+    <!-- 
+        Visualization & Content Choices: 
+        - Report Info: Key Performance Metrics (Total P&L, Win Rate, Avg. R:R, Total Trades). Goal: Inform. Viz/Method: Styled stat cards (HTML/CSS). Interaction: None. Justification: Provides immediate, high-level feedback on performance. Library: N/A.
+        - Report Info: Cumulative P&L over time. Goal: See Change/Trend. Viz/Method: Line Chart. Interaction: Hover tooltips for specific values. Justification: Visualizes account growth and identifies performance periods. Library: Chart.js.
+        - Report Info: Trade Outcomes (Win/Loss/BE). Goal: Show Proportions. Viz/Method: Doughnut Chart. Interaction: Hover tooltips for counts/percentages. Justification: Gives a quick understanding of the win/loss distribution. Library: Chart.js.
+        - Report Info: P&L by Trading Strategy. Goal: Compare. Viz/Method: Horizontal Bar Chart. Interaction: Hover tooltips. Justification: Clearly identifies which strategies are working and which are not, a core analysis function. Library: Chart.js.
+        - Report Info: All individual trade data points. Goal: Organize & Detail. Viz/Method: Interactive HTML Table. Interaction: Filter by result/strategy, sort, and view details in a modal. Justification: This is the core data repository, allowing for in-depth, flexible analysis of every trade. Library: N/A.
+        - Report Info: Data entry for a new trade. Goal: User Input. Viz/Method: Modal form. Interaction: Standard form elements. Justification: Creates the core functionality of the application, allowing users to populate the journal with their own data. Library: N/A.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <title>Interactive Day Trading Journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --text-primary: #212529;
+            --text-secondary: #4A5568;
+            --border-color: #E2E8F0;
+            --win: #2F855A;
+            --loss: #C53030;
+            --breakeven: #4A5568;
+            --accent: #2B6CB0;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            background-color: var(--card-bg);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+            width: 100%;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        .modal-active {
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .win-text { color: var(--win); }
+        .loss-text { color: var(--loss); }
+        .breakeven-text { color: var(--breakeven); }
+    </style>
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <header class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Day Trading Journal</h1>
+                <p class="text-gray-500 mt-1">Transform your trade data into actionable insights.</p>
+            </div>
+            <button id="addTradeBtn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300">+ Add Trade</button>
+        </header>
+
+        <main>
+            <!-- KPIs Section -->
+            <section id="kpi-section" class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Performance Dashboard</h2>
+                 <p class="text-gray-600 mb-4 text-sm max-w-4xl">
+                    This section provides a high-level, real-time overview of your trading performance. Key Performance Indicators (KPIs) like Total P&L, Win Rate, and Average Risk-to-Reward Ratio help you quickly assess your profitability and effectiveness without needing to dig into individual trades. Use this dashboard for a daily check on your financial progress and trading discipline.
+                </p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h3 class="text-sm font-medium text-gray-500">Total P&L</h3>
+                        <p id="kpi-total-pnl" class="text-2xl font-bold mt-1">$0.00</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h3 class="text-sm font-medium text-gray-500">Win Rate</h3>
+                        <p id="kpi-win-rate" class="text-2xl font-bold mt-1">0%</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h3 class="text-sm font-medium text-gray-500">Avg. R:R</h3>
+                        <p id="kpi-avg-rr" class="text-2xl font-bold mt-1">0.00</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h3 class="text-sm font-medium text-gray-500">Total Trades</h3>
+                        <p id="kpi-total-trades" class="text-2xl font-bold mt-1">0</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section id="charts-section" class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Visual Analysis</h2>
+                 <p class="text-gray-600 mb-4 text-sm max-w-4xl">
+                    Visualizations offer the quickest way to identify trends and patterns. The charts below break down your performance over time and by category. The Cumulative P&L chart tracks your account's growth, the Outcomes chart shows your win/loss distribution, and the Strategy Performance chart reveals which of your trading strategies are most effective. Use these visuals to refine your approach and focus on what works.
+                </p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="chart-container">
+                        <canvas id="pnlChart"></canvas>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="chart-container !h-auto">
+                            <canvas id="winLossChart"></canvas>
+                        </div>
+                        <div class="chart-container !h-auto">
+                            <canvas id="strategyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Trade Log Section -->
+            <section id="trade-log-section">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Trade Log</h2>
+                 <p class="text-gray-600 mb-4 text-sm max-w-4xl">
+                    Here is the detailed log of every trade you've taken. This table allows for granular analysis. You can sort by any column or use the filters to narrow down your view, for example, to see all trades for a specific asset or strategy. Click on any trade row to see the full details, including your notes and chart screenshots.
+                </p>
+                 <div class="flex flex-wrap gap-4 mb-4 items-center">
+                    <select id="filter-strategy" class="bg-white border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">All Strategies</option>
+                    </select>
+                    <select id="filter-result" class="bg-white border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">All Results</option>
+                        <option value="win">✅ Win</option>
+                        <option value="loss">❌ Loss</option>
+                        <option value="breakeven">➖ Break Even</option>
+                    </select>
+                </div>
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Date</th>
+                                <th scope="col" class="px-6 py-3">Asset</th>
+                                <th scope="col" class="px-6 py-3">Direction</th>
+                                <th scope="col" class="px-6 py-3">Strategy</th>
+                                <th scope="col" class="px-6 py-3">P&L ($)</th>
+                                <th scope="col" class="px-6 py-3">R:R</th>
+                                <th scope="col" class="px-6 py-3">Result</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trade-log-body">
+                            <!-- JS will populate this -->
+                        </tbody>
+                    </table>
+                     <div id="no-trades-message" class="text-center p-8 text-gray-500 hidden">
+                        <p>No trades logged yet. Click "+ Add Trade" to get started.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add/Edit Trade Modal -->
+    <div id="tradeModal" class="modal fixed w-full h-full top-0 left-0 flex items-center justify-center hidden">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-3xl mx-auto rounded-lg shadow-lg z-50 overflow-y-auto">
+            <div class="modal-content py-4 text-left px-6">
+                <div class="flex justify-between items-center pb-3">
+                    <p class="text-2xl font-bold">Log a New Trade</p>
+                    <button id="closeModalBtn" class="cursor-pointer z-50">
+                        <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                            <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="tradeForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <!-- Column 1 -->
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-1">Asset</label>
+                        <input type="text" id="asset" class="w-full px-3 py-2 border rounded" placeholder="e.g., EUR/USD, AAPL" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-1">Direction</label>
+                        <select id="direction" class="w-full px-3 py-2 border rounded" required>
+                            <option value="long">🟢 Long</option>
+                            <option value="short">🔴 Short</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-1">Strategy Used</label>
+                        <input type="text" id="strategy" class="w-full px-3 py-2 border rounded" placeholder="e.g., Breakout, Reversal" required>
+                    </div>
+                     <div>
+                        <label class="block text-gray-700 font-bold mb-1">Date</label>
+                        <input type="datetime-local" id="date" class="w-full px-3 py-2 border rounded" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-1">Entry Price</label>
+                            <input type="number" step="any" id="entryPrice" class="w-full px-3 py-2 border rounded" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-1">Exit Price</label>
+                            <input type="number" step="any" id="exitPrice" class="w-full px-3 py-2 border rounded" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                         <div>
+                            <label class="block text-gray-700 font-bold mb-1">Stop Loss</label>
+                            <input type="number" step="any" id="stopLoss" class="w-full px-3 py-2 border rounded" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-1">Take Profit</label>
+                            <input type="number" step="any" id="takeProfit" class="w-full px-3 py-2 border rounded">
+                        </div>
+                    </div>
+                     <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-1">Risk ($)</label>
+                            <input type="number" step="any" id="risk" class="w-full px-3 py-2 border rounded" placeholder="Amount risked" required>
+                        </div>
+                        <div>
+                             <label class="block text-gray-700 font-bold mb-1">P&L ($)</label>
+                            <input type="number" step="any" id="pnl" class="w-full px-3 py-2 border rounded" placeholder="Actual gain/loss" required>
+                        </div>
+                    </div>
+                     <div>
+                        <label class="block text-gray-700 font-bold mb-1">Emotions</label>
+                        <input type="text" id="emotions" class="w-full px-3 py-2 border rounded" placeholder="e.g., Confident, Anxious">
+                    </div>
+
+                    <!-- Column 2 -->
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-1">Trading Notes (Reasoning)</label>
+                        <textarea id="tradingNotes" rows="4" class="w-full px-3 py-2 border rounded" placeholder="Why did you take this trade?"></textarea>
+                    </div>
+                     <div>
+                        <label class="block text-gray-700 font-bold mb-1">Lessons Learned</label>
+                        <textarea id="lessonsLearned" rows="4" class="w-full px-3 py-2 border rounded" placeholder="What was the key takeaway?"></textarea>
+                    </div>
+                     <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-1">Setup Screenshot</label>
+                            <input type="file" id="setupScreenshot" class="text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold mb-1">Exit Screenshot</label>
+                            <input type="file" id="exitScreenshot" class="text-xs">
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 mt-4 flex justify-end">
+                         <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-300">Save Trade</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- DATA ---
+            // Sample data to start with. In a real app, this would be saved to localStorage or a server.
+            let trades = [
+                { id: 1, date: '2025-06-18T09:30:00', asset: 'EUR/USD', direction: 'long', strategy: 'Breakout', entryPrice: 1.0750, exitPrice: 1.0780, stopLoss: 1.0740, takeProfit: 1.0790, risk: 50, pnl: 150, emotions: 'Confident', notes: 'Clear breakout above resistance.', lessons: 'Good entry, respected plan.' },
+                { id: 2, date: '2025-06-18T11:05:00', asset: 'SPY', direction: 'short', strategy: 'Reversal', entryPrice: 548.50, exitPrice: 549.00, stopLoss: 549.50, takeProfit: 547.00, risk: 100, pnl: -100, emotions: 'Anxious, Impatient', notes: 'Forced the trade, no clear signal.', lessons: 'Do not trade without confirmation.' },
+                { id: 3, date: '2025-06-19T10:15:00', asset: 'Gold', direction: 'long', strategy: 'Trend Following', entryPrice: 2330, exitPrice: 2345, stopLoss: 2325, takeProfit: 2350, risk: 250, pnl: 750, emotions: 'Disciplined', notes: 'Followed the trend on the 1H chart.', lessons: 'Trend is your friend.' },
+                { id: 4, date: '2025-06-20T14:00:00', asset: 'AAPL', direction: 'long', strategy: 'News Trading', entryPrice: 214, exitPrice: 213.50, stopLoss: 213, takeProfit: 216, risk: 100, pnl: -50, emotions: 'Frustrated', notes: 'News was positive but market reacted negatively.', lessons: 'Market reaction is what matters, not the news itself.' },
+                { id: 5, date: '2025-06-21T09:45:00', asset: 'EUR/USD', direction: 'short', strategy: 'Scalping', entryPrice: 1.0720, exitPrice: 1.0710, stopLoss: 1.0725, takeProfit: 1.0705, risk: 25, pnl: 50, emotions: 'Calm', notes: 'Quick scalp off the 5min resistance.', lessons: 'Scalping strategy is effective in this range.' }
+            ];
+
+            // --- CHART INSTANCES ---
+            let pnlChartInstance, winLossChartInstance, strategyChartInstance;
+
+            // --- DOM ELEMENTS ---
+            const tradeLogBody = document.getElementById('trade-log-body');
+            const noTradesMessage = document.getElementById('no-trades-message');
+            const kpiTotalPnl = document.getElementById('kpi-total-pnl');
+            const kpiWinRate = document.getElementById('kpi-win-rate');
+            const kpiAvgRr = document.getElementById('kpi-avg-rr');
+            const kpiTotalTrades = document.getElementById('kpi-total-trades');
+            const modal = document.getElementById('tradeModal');
+            const addTradeBtn = document.getElementById('addTradeBtn');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const tradeForm = document.getElementById('tradeForm');
+            const filterStrategy = document.getElementById('filter-strategy');
+            const filterResult = document.getElementById('filter-result');
+
+            // --- MODAL LOGIC ---
+            const openModal = () => modal.classList.remove('hidden');
+            const closeModal = () => modal.classList.add('hidden');
+            
+            addTradeBtn.addEventListener('click', () => {
+                tradeForm.reset();
+                document.getElementById('date').valueAsNumber = new Date().getTime() - new Date().getTimezoneOffset() * 60000;
+                openModal();
+            });
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.querySelector('.modal-overlay').addEventListener('click', closeModal);
+            
+            // --- RENDERING & CALCULATIONS ---
+            const calculateResult = (pnl) => {
+                if (pnl > 0) return 'win';
+                if (pnl < 0) return 'loss';
+                return 'breakeven';
+            };
+
+            const calculateRR = (risk, pnl) => {
+                if (risk > 0 && pnl > 0) {
+                    return (pnl / risk).toFixed(2);
+                }
+                return 0;
+            };
+
+            const renderTradeLog = (tradesToRender) => {
+                tradeLogBody.innerHTML = '';
+                if (tradesToRender.length === 0) {
+                    noTradesMessage.classList.remove('hidden');
+                    return;
+                }
+                noTradesMessage.classList.add('hidden');
+
+                tradesToRender.forEach(trade => {
+                    const result = calculateResult(trade.pnl);
+                    const row = document.createElement('tr');
+                    row.className = 'bg-white border-b hover:bg-gray-50 cursor-pointer';
+                    row.innerHTML = `
+                        <td class="px-6 py-4">${new Date(trade.date).toLocaleDateString()}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">${trade.asset}</td>
+                        <td class="px-6 py-4">
+                            <span class="${trade.direction === 'long' ? 'win-text' : 'loss-text'} font-semibold">
+                                ${trade.direction.charAt(0).toUpperCase() + trade.direction.slice(1)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">${trade.strategy}</td>
+                        <td class="px-6 py-4 font-medium ${result === 'win' ? 'win-text' : result === 'loss' ? 'loss-text' : 'breakeven-text'}">
+                            $${trade.pnl.toFixed(2)}
+                        </td>
+                        <td class="px-6 py-4">${calculateRR(trade.risk, trade.pnl)}</td>
+                        <td class="px-6 py-4">
+                             <span class="px-2 py-1 font-semibold leading-tight text-xs rounded-full ${result === 'win' ? 'bg-green-100 win-text' : result === 'loss' ? 'bg-red-100 loss-text' : 'bg-gray-100 breakeven-text'}">
+                                ${result.charAt(0).toUpperCase() + result.slice(1)}
+                            </span>
+                        </td>
+                    `;
+                    tradeLogBody.appendChild(row);
+                });
+            };
+
+            const renderKPIs = () => {
+                const totalTrades = trades.length;
+                const totalPnl = trades.reduce((sum, trade) => sum + trade.pnl, 0);
+                const wins = trades.filter(t => t.pnl > 0).length;
+                const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
+                const totalRR = trades.reduce((sum, trade) => sum + parseFloat(calculateRR(trade.risk, trade.pnl)), 0);
+                const avgRr = totalTrades > 0 ? totalRR / totalTrades : 0;
+                
+                kpiTotalTrades.textContent = totalTrades;
+                kpiTotalPnl.textContent = `$${totalPnl.toFixed(2)}`;
+                kpiTotalPnl.className = `text-2xl font-bold mt-1 ${totalPnl >= 0 ? 'win-text' : 'loss-text'}`;
+                kpiWinRate.textContent = `${winRate.toFixed(1)}%`;
+                kpiAvgRr.textContent = avgRr.toFixed(2);
+            };
+
+            const populateFilters = () => {
+                const strategies = [...new Set(trades.map(t => t.strategy))];
+                filterStrategy.innerHTML = '<option value="all">All Strategies</option>';
+                strategies.forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s;
+                    option.textContent = s;
+                    filterStrategy.appendChild(option);
+                });
+            };
+
+            const renderAll = () => {
+                const sortedTrades = [...trades].sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                const strategyFilter = filterStrategy.value;
+                const resultFilter = filterResult.value;
+
+                const filteredTrades = sortedTrades.filter(trade => {
+                    const strategyMatch = strategyFilter === 'all' || trade.strategy === strategyFilter;
+                    const resultMatch = resultFilter === 'all' || calculateResult(trade.pnl) === resultFilter;
+                    return strategyMatch && resultMatch;
+                });
+
+                renderTradeLog(filteredTrades);
+                renderKPIs();
+                populateFilters();
+                renderPnlChart(sortedTrades); // Pass sorted trades to chart
+                renderWinLossChart();
+                renderStrategyChart();
+            };
+
+            // --- CHART RENDERING ---
+            const renderPnlChart = (sortedTrades) => {
+                const ctx = document.getElementById('pnlChart').getContext('2d');
+                if (pnlChartInstance) pnlChartInstance.destroy();
+
+                let cumulativePnl = 0;
+                const chartData = sortedTrades.reverse().map(trade => {
+                    cumulativePnl += trade.pnl;
+                    return { x: new Date(trade.date), y: cumulativePnl };
+                });
+
+                pnlChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            label: 'Cumulative P&L',
+                            data: chartData,
+                            borderColor: 'var(--accent)',
+                            backgroundColor: 'rgba(43, 108, 176, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            fill: true,
+                            pointRadius: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: { unit: 'day' },
+                                title: { display: true, text: 'Date' }
+                            },
+                            y: {
+                                title: { display: true, text: 'Cumulative P&L ($)' },
+                                ticks: {
+                                    callback: value => `$${value}`
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: { display: true, text: 'P&L Over Time', font: { size: 16 } },
+                            legend: { display: false }
+                        }
+                    }
+                });
+            };
+
+            const renderWinLossChart = () => {
+                const ctx = document.getElementById('winLossChart').getContext('2d');
+                if (winLossChartInstance) winLossChartInstance.destroy();
+                
+                const wins = trades.filter(t => t.pnl > 0).length;
+                const losses = trades.filter(t => t.pnl < 0).length;
+                const breakevens = trades.filter(t => t.pnl === 0).length;
+
+                winLossChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Wins', 'Losses', 'Break Evens'],
+                        datasets: [{
+                            data: [wins, losses, breakevens],
+                            backgroundColor: ['var(--win)', 'var(--loss)', 'var(--breakeven)'],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'Trade Outcomes', font: { size: 16 } },
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            };
+            
+            const renderStrategyChart = () => {
+                const ctx = document.getElementById('strategyChart').getContext('2d');
+                if (strategyChartInstance) strategyChartInstance.destroy();
+
+                const strategyData = trades.reduce((acc, trade) => {
+                    if (!acc[trade.strategy]) {
+                        acc[trade.strategy] = { pnl: 0 };
+                    }
+                    acc[trade.strategy].pnl += trade.pnl;
+                    return acc;
+                }, {});
+
+                const labels = Object.keys(strategyData);
+                const data = labels.map(label => strategyData[label].pnl);
+                
+                strategyChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Total P&L by Strategy',
+                            data: data,
+                            backgroundColor: data.map(pnl => pnl >= 0 ? 'rgba(47, 133, 90, 0.7)' : 'rgba(197, 48, 48, 0.7)'),
+                            borderColor: data.map(pnl => pnl >= 0 ? 'var(--win)' : 'var(--loss)'),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                         plugins: {
+                            title: { display: true, text: 'Strategy Performance', font: { size: 16 } },
+                            legend: { display: false }
+                        },
+                        scales: {
+                             x: {
+                                title: { display: true, text: 'Total P&L ($)' }
+                            }
+                        }
+                    }
+                });
+            };
+
+
+            // --- EVENT LISTENERS ---
+            tradeForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const newTrade = {
+                    id: trades.length > 0 ? Math.max(...trades.map(t => t.id)) + 1 : 1,
+                    date: document.getElementById('date').value,
+                    asset: document.getElementById('asset').value,
+                    direction: document.getElementById('direction').value,
+                    strategy: document.getElementById('strategy').value,
+                    entryPrice: parseFloat(document.getElementById('entryPrice').value),
+                    exitPrice: parseFloat(document.getElementById('exitPrice').value),
+                    stopLoss: parseFloat(document.getElementById('stopLoss').value),
+                    takeProfit: parseFloat(document.getElementById('takeProfit').value),
+                    risk: parseFloat(document.getElementById('risk').value),
+                    pnl: parseFloat(document.getElementById('pnl').value),
+                    emotions: document.getElementById('emotions').value,
+                    notes: document.getElementById('tradingNotes').value,
+                    lessons: document.getElementById('lessonsLearned').value,
+                };
+
+                trades.push(newTrade);
+                closeModal();
+                renderAll();
+            });
+            
+            filterStrategy.addEventListener('change', renderAll);
+            filterResult.addEventListener('change', renderAll);
+
+            // Initial Render
+            renderAll();
+        });
+    </script>
+</body>
+</html>
