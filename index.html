@@ -356,12 +356,18 @@
                     </div>
                     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-gray-700 font-bold mb-1">Setup Screenshot URL</label>
-                            <input type="text" id="addSetupScreenshotUrl" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., https://example.com/setup.png">
+                            <label class="block text-gray-700 font-bold mb-1">Setup Screenshot</label>
+                            <input type="file" id="addSetupScreenshot" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" accept="image/*">
+                            <div id="addSetupScreenshotPreview" class="screenshot-placeholder mt-2">
+                                <span class="text-gray-500">No Setup Screenshot Selected</span>
+                            </div>
                         </div>
                         <div>
-                            <label class="block text-gray-700 font-bold mb-1">Exit Screenshot URL</label>
-                            <input type="text" id="addExitScreenshotUrl" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., https://example.com/exit.png">
+                            <label class="block text-gray-700 font-bold mb-1">Exit Screenshot</label>
+                            <input type="file" id="addExitScreenshot" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" accept="image/*">
+                            <div id="addExitScreenshotPreview" class="screenshot-placeholder mt-2">
+                                <span class="text-gray-500">No Exit Screenshot Selected</span>
+                            </div>
                         </div>
                     </div>
                     <div class="md:col-span-2 mt-4 flex justify-end">
@@ -452,16 +458,16 @@
                     </div>
                     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-gray-700 font-bold mb-1">Setup Screenshot URL</label>
-                            <input type="text" id="detailsSetupScreenshotUrl" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="Paste image URL">
-                            <div id="setupScreenshotPreview" class="screenshot-placeholder mt-2">
+                            <label class="block text-gray-700 font-bold mb-1">Setup Screenshot</label>
+                            <input type="file" id="detailsSetupScreenshot" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" accept="image/*">
+                            <div id="detailsSetupScreenshotPreview" class="screenshot-placeholder mt-2">
                                 <span class="text-gray-500">No Setup Screenshot</span>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-gray-700 font-bold mb-1">Exit Screenshot URL</label>
-                            <input type="text" id="detailsExitScreenshotUrl" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="Paste image URL">
-                            <div id="exitScreenshotPreview" class="screenshot-placeholder mt-2">
+                            <label class="block text-gray-700 font-bold mb-1">Exit Screenshot</label>
+                            <input type="file" id="detailsExitScreenshot" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" accept="image/*">
+                            <div id="detailsExitScreenshotPreview" class="screenshot-placeholder mt-2">
                                 <span class="text-gray-500">No Exit Screenshot</span>
                             </div>
                         </div>
@@ -479,13 +485,13 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // --- DATA ---
-            // Sample data with added screenshot URLs
+            // Sample data with added screenshot URLs (now base64 data)
             let trades = [
-                { id: 1, date: '2025-06-18T09:30:00', asset: 'EUR/USD', direction: 'long', strategy: 'Breakout', entryPrice: 1.0750, exitPrice: 1.0780, stopLoss: 1.0740, takeProfit: 1.0790, risk: 50, pnl: 150, emotions: 'Confident', notes: 'Clear breakout above resistance.', lessons: 'Good entry, respected plan.', setupScreenshotUrl: 'https://placehold.co/300x200/4CAF50/FFFFFF?text=Setup+1', exitScreenshotUrl: 'https://placehold.co/300x200/FFC107/FFFFFF?text=Exit+1' },
-                { id: 2, date: '2025-06-18T11:05:00', asset: 'SPY', direction: 'short', strategy: 'Reversal', entryPrice: 548.50, exitPrice: 549.00, stopLoss: 549.50, takeProfit: 547.00, risk: 100, pnl: -100, emotions: 'Anxious, Impatient', notes: 'Forced the trade, no clear signal.', lessons: 'Do not trade without confirmation.', setupScreenshotUrl: 'https://placehold.co/300x200/F44336/FFFFFF?text=Setup+2', exitScreenshotUrl: 'https://placehold.co/300x200/2196F3/FFFFFF?text=Exit+2' },
-                { id: 3, date: '2025-06-19T10:15:00', asset: 'Gold', direction: 'long', strategy: 'Trend Following', entryPrice: 2330, exitPrice: 2345, stopLoss: 2325, takeProfit: 2350, risk: 250, pnl: 750, emotions: 'Disciplined', notes: 'Followed the trend on the 1H chart.', lessons: 'Trend is your friend.', setupScreenshotUrl: '', exitScreenshotUrl: '' },
-                { id: 4, date: '2025-06-20T14:00:00', asset: 'AAPL', direction: 'long', strategy: 'News Trading', entryPrice: 214, exitPrice: 213.50, stopLoss: 213, takeProfit: 216, risk: 100, pnl: -50, emotions: 'Frustrated', notes: 'News was positive but market reacted negatively.', lessons: 'Market reaction is what matters, not the news itself.', setupScreenshotUrl: 'https://placehold.co/300x200/9C27B0/FFFFFF?text=Setup+4', exitScreenshotUrl: 'https://placehold.co/300x200/E91E63/FFFFFF?text=Exit+4' },
-                { id: 5, date: '2025-06-21T09:45:00', asset: 'EUR/USD', direction: 'short', strategy: 'Scalping', entryPrice: 1.0720, exitPrice: 1.0710, stopLoss: 1.0725, takeProfit: 1.0705, risk: 25, pnl: 50, emotions: 'Calm', notes: 'Quick scalp off the 5min resistance.', lessons: 'Scalping strategy is effective in this range.', setupScreenshotUrl: 'https://placehold.co/300x200/00BCD4/FFFFFF?text=Setup+5', exitScreenshotUrl: 'https://placehold.co/300x200/FF9800/FFFFFF?text=Exit+5' }
+                { id: 1, date: '2025-06-18T09:30:00', asset: 'EUR/USD', direction: 'long', strategy: 'Breakout', entryPrice: 1.0750, exitPrice: 1.0780, stopLoss: 1.0740, takeProfit: 1.0790, risk: 50, pnl: 150, emotions: 'Confident', notes: 'Clear breakout above resistance.', lessons: 'Good entry, respected plan.', setupScreenshot: 'https://placehold.co/300x200/4CAF50/FFFFFF?text=Setup+1', exitScreenshot: 'https://placehold.co/300x200/FFC107/FFFFFF?text=Exit+1' },
+                { id: 2, date: '2025-06-18T11:05:00', asset: 'SPY', direction: 'short', strategy: 'Reversal', entryPrice: 548.50, exitPrice: 549.00, stopLoss: 549.50, takeProfit: 547.00, risk: 100, pnl: -100, emotions: 'Anxious, Impatient', notes: 'Forced the trade, no clear signal.', lessons: 'Do not trade without confirmation.', setupScreenshot: 'https://placehold.co/300x200/F44336/FFFFFF?text=Setup+2', exitScreenshot: 'https://placehold.co/300x200/2196F3/FFFFFF?text=Exit+2' },
+                { id: 3, date: '2025-06-19T10:15:00', asset: 'Gold', direction: 'long', strategy: 'Trend Following', entryPrice: 2330, exitPrice: 2345, stopLoss: 2325, takeProfit: 2350, risk: 250, pnl: 750, emotions: 'Disciplined', notes: 'Followed the trend on the 1H chart.', lessons: 'Trend is your friend.', setupScreenshot: '', exitScreenshot: '' },
+                { id: 4, date: '2025-06-20T14:00:00', asset: 'AAPL', direction: 'long', strategy: 'News Trading', entryPrice: 214, exitPrice: 213.50, stopLoss: 213, takeProfit: 216, risk: 100, pnl: -50, emotions: 'Frustrated', notes: 'News was positive but market reacted negatively.', lessons: 'Market reaction is what matters, not the news itself.', setupScreenshot: 'https://placehold.co/300x200/9C27B0/FFFFFF?text=Setup+4', exitScreenshot: 'https://placehold.co/300x200/E91E63/FFFFFF?text=Exit+4' },
+                { id: 5, date: '2025-06-21T09:45:00', asset: 'EUR/USD', direction: 'short', strategy: 'Scalping', entryPrice: 1.0720, exitPrice: 1.0710, stopLoss: 1.0725, takeProfit: 1.0705, risk: 25, pnl: 50, emotions: 'Calm', notes: 'Quick scalp off the 5min resistance.', lessons: 'Scalping strategy is effective in this range.', setupScreenshot: 'https://placehold.co/300x200/00BCD4/FFFFFF?text=Setup+5', exitScreenshot: 'https://placehold.co/300x200/FF9800/FFFFFF?text=Exit+5' }
             ];
 
             // --- CHART INSTANCES ---
@@ -504,6 +510,11 @@
             const addTradeBtn = document.getElementById('addTradeBtn');
             const closeAddModalBtn = document.getElementById('closeAddModalBtn');
             const addTradeForm = document.getElementById('addTradeForm');
+            const addSetupScreenshot = document.getElementById('addSetupScreenshot');
+            const addExitScreenshot = document.getElementById('addExitScreenshot');
+            const addSetupScreenshotPreview = document.getElementById('addSetupScreenshotPreview');
+            const addExitScreenshotPreview = document.getElementById('addExitScreenshotPreview');
+
 
             // Trade Details/Edit Modal elements
             const tradeDetailsModal = document.getElementById('tradeDetailsModal');
@@ -524,10 +535,10 @@
             const detailsEmotions = document.getElementById('detailsEmotions');
             const detailsTradingNotes = document.getElementById('detailsTradingNotes');
             const detailsLessonsLearned = document.getElementById('detailsLessonsLearned');
-            const detailsSetupScreenshotUrl = document.getElementById('detailsSetupScreenshotUrl');
-            const detailsExitScreenshotUrl = document.getElementById('detailsExitScreenshotUrl');
-            const setupScreenshotPreview = document.getElementById('setupScreenshotPreview');
-            const exitScreenshotPreview = document.getElementById('exitScreenshotPreview');
+            const detailsSetupScreenshot = document.getElementById('detailsSetupScreenshot');
+            const detailsExitScreenshot = document.getElementById('detailsExitScreenshot');
+            const detailsSetupScreenshotPreview = document.getElementById('detailsSetupScreenshotPreview');
+            const detailsExitScreenshotPreview = document.getElementById('detailsExitScreenshotPreview');
 
             const filterStrategy = document.getElementById('filter-strategy');
             const filterResult = document.getElementById('filter-result');
@@ -540,7 +551,7 @@
             const loadTheme = () => {
                 const savedTheme = localStorage.getItem('theme') || 'light';
                 document.documentElement.setAttribute('data-theme', savedTheme);
-                themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+                themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '�';
             };
 
             const toggleTheme = () => {
@@ -568,6 +579,8 @@
             
             addTradeBtn.addEventListener('click', () => {
                 addTradeForm.reset();
+                addSetupScreenshotPreview.innerHTML = '<span class="text-gray-500">No Setup Screenshot Selected</span>';
+                addExitScreenshotPreview.innerHTML = '<span class="text-gray-500">No Exit Screenshot Selected</span>';
                 // Set default date to current local time
                 const now = new Date();
                 now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -580,6 +593,38 @@
             closeDetailsModalBtn.addEventListener('click', () => closeModal(tradeDetailsModal));
             tradeDetailsModal.querySelector('.modal-overlay').addEventListener('click', () => closeModal(tradeDetailsModal));
             
+            // --- FILE HANDLERS ---
+            const readFileAsBase64 = (file) => {
+                return new Promise((resolve, reject) => {
+                    if (!file) {
+                        resolve(''); // No file selected, resolve with empty string
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            const displayImagePreview = (fileInput, previewElement) => {
+                if (fileInput.files && fileInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        previewElement.innerHTML = `<img src="${e.target.result}" alt="Screenshot">`;
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    previewElement.innerHTML = '<span class="text-gray-500">No Screenshot Selected</span>';
+                }
+            };
+
+            addSetupScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, addSetupScreenshotPreview));
+            addExitScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, addExitScreenshotPreview));
+            detailsSetupScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, detailsSetupScreenshotPreview));
+            detailsExitScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, detailsExitScreenshotPreview));
+
+
             // --- RENDERING & CALCULATIONS ---
             const calculateResult = (pnl) => {
                 if (pnl > 0) return 'win';
@@ -693,7 +738,7 @@
                 const ctx = document.getElementById('pnlChart').getContext('2d');
                 if (pnlChartInstance) pnlChartInstance.destroy();
                 const colors = getChartColors();
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark'; // Define isDark here
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark'; 
 
                 let cumulativePnl = 0;
                 const chartData = sortedTrades.reverse().map(trade => {
@@ -852,23 +897,30 @@
                 detailsEmotions.value = trade.emotions;
                 detailsTradingNotes.value = trade.notes;
                 detailsLessonsLearned.value = trade.lessons;
-                detailsSetupScreenshotUrl.value = trade.setupScreenshotUrl || '';
-                detailsExitScreenshotUrl.value = trade.exitScreenshotUrl || '';
+                
+                // Clear file inputs, as they can't be pre-filled for security reasons
+                detailsSetupScreenshot.value = ''; 
+                detailsExitScreenshot.value = '';
 
                 // Display screenshots or placeholders
-                setupScreenshotPreview.innerHTML = trade.setupScreenshotUrl 
-                    ? `<img src="${trade.setupScreenshotUrl}" alt="Setup Screenshot" onerror="this.onerror=null;this.src='https://placehold.co/300x200/F0F0F0/888888?text=Error+Loading+Image';">`
+                detailsSetupScreenshotPreview.innerHTML = trade.setupScreenshot
+                    ? `<img src="${trade.setupScreenshot}" alt="Setup Screenshot" onerror="this.onerror=null;this.src='https://placehold.co/300x200/F0F0F0/888888?text=Error+Loading+Image';">`
                     : '<span class="text-gray-500">No Setup Screenshot</span>';
-                exitScreenshotPreview.innerHTML = trade.exitScreenshotUrl
-                    ? `<img src="${trade.exitScreenshotUrl}" alt="Exit Screenshot" onerror="this.onerror=null;this.src='https://placehold.co/300x200/F0F0F0/888888?text=Error+Loading+Image';">`
+                detailsExitScreenshotPreview.innerHTML = trade.exitScreenshot
+                    ? `<img src="${trade.exitScreenshot}" alt="Exit Screenshot" onerror="this.onerror=null;this.src='https://placehold.co/300x200/F0F0F0/888888?text=Error+Loading+Image';">`
                     : '<span class="text-gray-500">No Exit Screenshot</span>';
 
                 openModal(tradeDetailsModal);
             };
 
             // --- EVENT LISTENERS ---
-            addTradeForm.addEventListener('submit', function (e) {
+            addTradeForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
+
+                // Read files as Base64 asynchronously
+                const setupScreenshotBase64 = await readFileAsBase64(addSetupScreenshot.files[0]);
+                const exitScreenshotBase64 = await readFileAsBase64(addExitScreenshot.files[0]);
+
                 const newTrade = {
                     id: trades.length > 0 ? Math.max(...trades.map(t => t.id)) + 1 : 1,
                     date: document.getElementById('addDate').value,
@@ -884,8 +936,8 @@
                     emotions: document.getElementById('addEmotions').value,
                     notes: document.getElementById('addTradingNotes').value,
                     lessons: document.getElementById('addLessonsLearned').value,
-                    setupScreenshotUrl: document.getElementById('addSetupScreenshotUrl').value,
-                    exitScreenshotUrl: document.getElementById('addExitScreenshotUrl').value,
+                    setupScreenshot: setupScreenshotBase64,
+                    exitScreenshot: exitScreenshotBase64,
                 };
 
                 trades.push(newTrade);
@@ -893,12 +945,22 @@
                 renderAll();
             });
             
-            tradeDetailsForm.addEventListener('submit', function(e) {
+            tradeDetailsForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const idToUpdate = parseInt(detailsTradeId.value);
                 const tradeIndex = trades.findIndex(t => t.id === idToUpdate);
 
                 if (tradeIndex > -1) {
+                    const currentTrade = trades[tradeIndex];
+
+                    // Determine if new files are selected or keep existing Base64
+                    const updatedSetupScreenshot = detailsSetupScreenshot.files[0] 
+                        ? await readFileAsBase64(detailsSetupScreenshot.files[0]) 
+                        : currentTrade.setupScreenshot;
+                    const updatedExitScreenshot = detailsExitScreenshot.files[0] 
+                        ? await readFileAsBase64(detailsExitScreenshot.files[0]) 
+                        : currentTrade.exitScreenshot;
+
                     trades[tradeIndex] = {
                         id: idToUpdate,
                         date: detailsDate.value,
@@ -914,8 +976,8 @@
                         emotions: detailsEmotions.value,
                         notes: detailsTradingNotes.value,
                         lessons: detailsLessonsLearned.value,
-                        setupScreenshotUrl: detailsSetupScreenshotUrl.value,
-                        exitScreenshotUrl: detailsExitScreenshotUrl.value,
+                        setupScreenshot: updatedSetupScreenshot,
+                        exitScreenshot: updatedExitScreenshot,
                     };
                     closeModal(tradeDetailsModal);
                     renderAll();
@@ -948,3 +1010,4 @@
     </script>
 </body>
 </html>
+�
