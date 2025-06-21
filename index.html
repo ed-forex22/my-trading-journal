@@ -163,6 +163,48 @@
         .bg-green-100 { background-color: rgba(47, 133, 90, 0.2); } /* Adjusted for general bg */
         .bg-red-100 { background-color: rgba(197, 48, 48, 0.2); } /* Adjusted for general bg */
         .bg-gray-100 { background-color: rgba(74, 85, 104, 0.2); } /* Adjusted for general bg */
+        .file-upload-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .file-input-wrapper {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            overflow: hidden;
+            background-color: var(--card-bg);
+            position: relative;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-input-wrapper .file-label {
+            flex-grow: 1;
+            padding: 0.5rem 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .file-input-wrapper .file-button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .file-input-wrapper .file-button:hover {
+            background-color: var(--button-hover-bg);
+        }
     </style>
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 </head>
@@ -355,19 +397,31 @@
                         <textarea id="addLessonsLearned" rows="4" class="w-full px-3 py-2 border rounded text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="What was the key takeaway?"></textarea>
                     </div>
                     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
+                        <div class="file-upload-container">
                             <label class="block text-gray-700 font-bold mb-1">Setup Screenshot</label>
-                            <input type="file" id="addSetupScreenshot" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" accept="image/*">
+                            <div class="file-input-wrapper">
+                                <input type="file" id="addSetupScreenshot" accept="image/*">
+                                <span class="file-label" id="addSetupScreenshotFileName">Choose File...</span>
+                                <span class="file-button">Browse</span>
+                            </div>
+                            <button type="button" id="analyzeAddSetupBtn" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300 text-sm mt-2">Analyze Setup Screenshot</button>
                             <div id="addSetupScreenshotPreview" class="screenshot-placeholder mt-2">
                                 <span class="text-gray-500">No Setup Screenshot Selected</span>
                             </div>
+                            <p id="addSetupAnalysisStatus" class="text-gray-600 text-xs mt-1"></p>
                         </div>
-                        <div>
+                        <div class="file-upload-container">
                             <label class="block text-gray-700 font-bold mb-1">Exit Screenshot</label>
-                            <input type="file" id="addExitScreenshot" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" accept="image/*">
+                            <div class="file-input-wrapper">
+                                <input type="file" id="addExitScreenshot" accept="image/*">
+                                <span class="file-label" id="addExitScreenshotFileName">Choose File...</span>
+                                <span class="file-button">Browse</span>
+                            </div>
+                             <button type="button" id="analyzeAddExitBtn" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300 text-sm mt-2">Analyze Exit Screenshot</button>
                             <div id="addExitScreenshotPreview" class="screenshot-placeholder mt-2">
                                 <span class="text-gray-500">No Exit Screenshot Selected</span>
                             </div>
+                            <p id="addExitAnalysisStatus" class="text-gray-600 text-xs mt-1"></p>
                         </div>
                     </div>
                     <div class="md:col-span-2 mt-4 flex justify-end">
@@ -457,16 +511,24 @@
                         <textarea id="detailsLessonsLearned" rows="4" class="w-full px-3 py-2 border rounded text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="What was the key takeaway?"></textarea>
                     </div>
                     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
+                        <div class="file-upload-container">
                             <label class="block text-gray-700 font-bold mb-1">Setup Screenshot</label>
-                            <input type="file" id="detailsSetupScreenshot" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" accept="image/*">
+                            <div class="file-input-wrapper">
+                                <input type="file" id="detailsSetupScreenshot" accept="image/*">
+                                <span class="file-label" id="detailsSetupScreenshotFileName">Choose File...</span>
+                                <span class="file-button">Browse</span>
+                            </div>
                             <div id="detailsSetupScreenshotPreview" class="screenshot-placeholder mt-2">
                                 <span class="text-gray-500">No Setup Screenshot</span>
                             </div>
                         </div>
-                        <div>
+                        <div class="file-upload-container">
                             <label class="block text-gray-700 font-bold mb-1">Exit Screenshot</label>
-                            <input type="file" id="detailsExitScreenshot" class="w-full px-3 py-2 border rounded text-xs text-gray-800 bg-white border-gray-300 focus:ring-blue-500 focus:border-blue-500" accept="image/*">
+                            <div class="file-input-wrapper">
+                                <input type="file" id="detailsExitScreenshot" accept="image/*">
+                                <span class="file-label" id="detailsExitScreenshotFileName">Choose File...</span>
+                                <span class="file-button">Browse</span>
+                            </div>
                             <div id="detailsExitScreenshotPreview" class="screenshot-placeholder mt-2">
                                 <span class="text-gray-500">No Exit Screenshot</span>
                             </div>
@@ -485,7 +547,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // --- DATA ---
-            // Sample data with added screenshot URLs (now base64 data)
+            // Sample data with added screenshot (Base64) or placeholder URLs
             let trades = [
                 { id: 1, date: '2025-06-18T09:30:00', asset: 'EUR/USD', direction: 'long', strategy: 'Breakout', entryPrice: 1.0750, exitPrice: 1.0780, stopLoss: 1.0740, takeProfit: 1.0790, risk: 50, pnl: 150, emotions: 'Confident', notes: 'Clear breakout above resistance.', lessons: 'Good entry, respected plan.', setupScreenshot: 'https://placehold.co/300x200/4CAF50/FFFFFF?text=Setup+1', exitScreenshot: 'https://placehold.co/300x200/FFC107/FFFFFF?text=Exit+1' },
                 { id: 2, date: '2025-06-18T11:05:00', asset: 'SPY', direction: 'short', strategy: 'Reversal', entryPrice: 548.50, exitPrice: 549.00, stopLoss: 549.50, takeProfit: 547.00, risk: 100, pnl: -100, emotions: 'Anxious, Impatient', notes: 'Forced the trade, no clear signal.', lessons: 'Do not trade without confirmation.', setupScreenshot: 'https://placehold.co/300x200/F44336/FFFFFF?text=Setup+2', exitScreenshot: 'https://placehold.co/300x200/2196F3/FFFFFF?text=Exit+2' },
@@ -514,6 +576,12 @@
             const addExitScreenshot = document.getElementById('addExitScreenshot');
             const addSetupScreenshotPreview = document.getElementById('addSetupScreenshotPreview');
             const addExitScreenshotPreview = document.getElementById('addExitScreenshotPreview');
+            const addSetupScreenshotFileName = document.getElementById('addSetupScreenshotFileName');
+            const addExitScreenshotFileName = document.getElementById('addExitScreenshotFileName');
+            const analyzeAddSetupBtn = document.getElementById('analyzeAddSetupBtn');
+            const analyzeAddExitBtn = document.getElementById('analyzeAddExitBtn');
+            const addSetupAnalysisStatus = document.getElementById('addSetupAnalysisStatus');
+            const addExitAnalysisStatus = document.getElementById('addExitAnalysisStatus');
 
 
             // Trade Details/Edit Modal elements
@@ -539,6 +607,9 @@
             const detailsExitScreenshot = document.getElementById('detailsExitScreenshot');
             const detailsSetupScreenshotPreview = document.getElementById('detailsSetupScreenshotPreview');
             const detailsExitScreenshotPreview = document.getElementById('detailsExitScreenshotPreview');
+            const detailsSetupScreenshotFileName = document.getElementById('detailsSetupScreenshotFileName');
+            const detailsExitScreenshotFileName = document.getElementById('detailsExitScreenshotFileName');
+
 
             const filterStrategy = document.getElementById('filter-strategy');
             const filterResult = document.getElementById('filter-result');
@@ -551,7 +622,7 @@
             const loadTheme = () => {
                 const savedTheme = localStorage.getItem('theme') || 'light';
                 document.documentElement.setAttribute('data-theme', savedTheme);
-                themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '�';
+                themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
             };
 
             const toggleTheme = () => {
@@ -581,6 +652,10 @@
                 addTradeForm.reset();
                 addSetupScreenshotPreview.innerHTML = '<span class="text-gray-500">No Setup Screenshot Selected</span>';
                 addExitScreenshotPreview.innerHTML = '<span class="text-gray-500">No Exit Screenshot Selected</span>';
+                addSetupScreenshotFileName.textContent = 'Choose File...';
+                addExitScreenshotFileName.textContent = 'Choose File...';
+                addSetupAnalysisStatus.textContent = '';
+                addExitAnalysisStatus.textContent = '';
                 // Set default date to current local time
                 const now = new Date();
                 now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -593,7 +668,7 @@
             closeDetailsModalBtn.addEventListener('click', () => closeModal(tradeDetailsModal));
             tradeDetailsModal.querySelector('.modal-overlay').addEventListener('click', () => closeModal(tradeDetailsModal));
             
-            // --- FILE HANDLERS ---
+            // --- FILE HANDLERS & GEMINI INTEGRATION ---
             const readFileAsBase64 = (file) => {
                 return new Promise((resolve, reject) => {
                     if (!file) {
@@ -607,22 +682,154 @@
                 });
             };
 
-            const displayImagePreview = (fileInput, previewElement) => {
+            const displayImagePreview = (fileInput, previewElement, fileNameElement) => {
                 if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    fileNameElement.textContent = file.name;
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         previewElement.innerHTML = `<img src="${e.target.result}" alt="Screenshot">`;
                     };
-                    reader.readAsDataURL(fileInput.files[0]);
+                    reader.readAsDataURL(file);
                 } else {
+                    fileNameElement.textContent = 'Choose File...';
                     previewElement.innerHTML = '<span class="text-gray-500">No Screenshot Selected</span>';
                 }
             };
 
-            addSetupScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, addSetupScreenshotPreview));
-            addExitScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, addExitScreenshotPreview));
-            detailsSetupScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, detailsSetupScreenshotPreview));
-            detailsExitScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, detailsExitScreenshotPreview));
+            // Event listeners for file input change to update file name and preview
+            addSetupScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, addSetupScreenshotPreview, addSetupScreenshotFileName));
+            addExitScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, addExitScreenshotPreview, addExitScreenshotFileName));
+            detailsSetupScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, detailsSetupScreenshotPreview, detailsSetupScreenshotFileName));
+            detailsExitScreenshot.addEventListener('change', (e) => displayImagePreview(e.target, detailsExitScreenshotPreview, detailsExitScreenshotFileName));
+
+            const analyzeScreenshot = async (fileInput, statusElement) => {
+                statusElement.textContent = 'Analyzing...';
+                statusElement.style.color = 'var(--accent)';
+
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    statusElement.textContent = 'No file selected for analysis.';
+                    statusElement.style.color = 'var(--loss)';
+                    return;
+                }
+
+                const file = fileInput.files[0];
+                // Check if file size exceeds a reasonable limit for API (e.g., 4MB)
+                if (file.size > 4 * 1024 * 1024) { // 4MB limit
+                    statusElement.textContent = 'File too large (max 4MB). Please upload a smaller image.';
+                    statusElement.style.color = 'var(--loss)';
+                    return;
+                }
+
+                const base64ImageData = (await readFileAsBase64(file)).split(',')[1]; // Get base64 content without data:image/png;base64, prefix
+
+                // Define the structured response schema
+                const responseSchema = {
+                    type: "OBJECT",
+                    properties: {
+                        "asset": { "type": "STRING", "description": "The trading asset, e.g., 'EUR/USD', 'AAPL'" },
+                        "direction": { "type": "STRING", "enum": ["long", "short"], "description": "The trade direction, 'long' or 'short'" },
+                        "entryPrice": { "type": "NUMBER", "description": "The entry price of the trade" },
+                        "exitPrice": { "type": "NUMBER", "description": "The exit price of the trade" },
+                        "pnl": { "type": "NUMBER", "description": "The profit or loss of the trade" },
+                        "date": { "type": "STRING", "description": "The date of the trade in YYYY-MM-DD format" },
+                        "time": { "type": "STRING", "description": "The time of the trade in HH:MM format (24-hour)" },
+                        "strategy": { "type": "STRING", "description": "The trading strategy used, e.g., 'Breakout', 'Reversal'" },
+                        "emotions": { "type": "STRING", "description": "Emotions felt during the trade, e.g., 'Confident', 'Anxious'" },
+                        "notes": { "type": "STRING", "description": "Key notes about the trade reasoning" },
+                        "lessons": { "type": "STRING", "description": "Lessons learned from the trade" }
+                    },
+                    "optionalProperties": ["strategy", "emotions", "notes", "lessons"] // Mark optional fields
+                };
+
+                const prompt = "Analyze this trading chart screenshot. Extract the following information: asset, trade direction (long/short), entry price, exit price, profit/loss (P&L), and the date and time of the trade. If identifiable, also extract the strategy used, emotions, notes, and lessons learned. Provide the response as a JSON object strictly following the provided schema. If a value is not found, omit the property.";
+
+                try {
+                    const chatHistory = [];
+                    chatHistory.push({
+                        role: "user",
+                        parts: [
+                            { text: prompt },
+                            {
+                                inlineData: {
+                                    mimeType: file.type, // Use actual mime type
+                                    data: base64ImageData
+                                }
+                            }
+                        ]
+                    });
+
+                    const payload = {
+                        contents: chatHistory,
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: responseSchema
+                        }
+                    };
+
+                    const apiKey = ""; // Canvas will automatically provide the API key
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        
+                        const jsonString = result.candidates[0].content.parts[0].text;
+                        const parsedData = JSON.parse(jsonString);
+                        console.log('Parsed data:', parsedData); // Debugging
+
+                        // Populate form fields
+                        if (parsedData.asset) document.getElementById('addAsset').value = parsedData.asset;
+                        // Direction is an enum, so ensure it's a valid option
+                        if (parsedData.direction && (parsedData.direction === 'long' || parsedData.direction === 'short')) {
+                            document.getElementById('addDirection').value = parsedData.direction;
+                        }
+                        if (parsedData.entryPrice !== undefined) document.getElementById('addEntryPrice').value = parsedData.entryPrice;
+                        if (parsedData.exitPrice !== undefined) document.getElementById('addExitPrice').value = parsedData.exitPrice;
+                        if (parsedData.pnl !== undefined) document.getElementById('addPnl').value = parsedData.pnl;
+                        if (parsedData.strategy) document.getElementById('addStrategy').value = parsedData.strategy;
+                        if (parsedData.emotions) document.getElementById('addEmotions').value = parsedData.emotions;
+                        if (parsedData.notes) document.getElementById('addTradingNotes').value = parsedData.notes;
+                        if (parsedData.lessons) document.getElementById('addLessonsLearned').value = parsedData.lessons;
+
+                        // Handle date and time
+                        let fullDateTime = '';
+                        if (parsedData.date && parsedData.time) {
+                            // Assuming parsedData.date is YYYY-MM-DD and parsedData.time is HH:MM
+                            fullDateTime = `${parsedData.date}T${parsedData.time}`;
+                        } else if (parsedData.date) {
+                            fullDateTime = `${parsedData.date}T00:00`; // Default time if only date is available
+                        }
+                        if (fullDateTime) {
+                            document.getElementById('addDate').value = fullDateTime;
+                        }
+
+                        statusElement.textContent = 'Analysis complete!';
+                        statusElement.style.color = 'var(--win)';
+
+                    } else {
+                        statusElement.textContent = 'Analysis failed: Could not extract data.';
+                        statusElement.style.color = 'var(--loss)';
+                        console.error('Gemini API response structure unexpected or empty:', result);
+                    }
+                } catch (error) {
+                    statusElement.textContent = `Analysis error: ${error.message}`;
+                    statusElement.style.color = 'var(--loss)';
+                    console.error('Error analyzing screenshot:', error);
+                }
+            };
+
+            // Attach event listeners for analyze buttons
+            analyzeAddSetupBtn.addEventListener('click', () => analyzeScreenshot(addSetupScreenshot, addSetupAnalysisStatus));
+            analyzeAddExitBtn.addEventListener('click', () => analyzeScreenshot(addExitScreenshot, addExitAnalysisStatus));
 
 
             // --- RENDERING & CALCULATIONS ---
@@ -901,6 +1108,9 @@
                 // Clear file inputs, as they can't be pre-filled for security reasons
                 detailsSetupScreenshot.value = ''; 
                 detailsExitScreenshot.value = '';
+                detailsSetupScreenshotFileName.textContent = 'Choose File...';
+                detailsExitScreenshotFileName.textContent = 'Choose File...';
+
 
                 // Display screenshots or placeholders
                 detailsSetupScreenshotPreview.innerHTML = trade.setupScreenshot
@@ -1010,4 +1220,3 @@
     </script>
 </body>
 </html>
-�
